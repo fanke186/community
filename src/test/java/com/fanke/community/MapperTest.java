@@ -20,6 +20,7 @@ import java.util.List;
 
 
 // I said
+// ok
 @SpringBootTest
 @ContextConfiguration(classes = CommunityApplication.class)
 public class MapperTest {
