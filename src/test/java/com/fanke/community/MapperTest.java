@@ -18,6 +18,8 @@ import java.util.List;
  * @Created 2021/9/20 22:49
  */
 
+
+// I said
 @SpringBootTest
 @ContextConfiguration(classes = CommunityApplication.class)
 public class MapperTest {
@@ -26,7 +28,7 @@ public class MapperTest {
     private final DiscussPostMapper discussPostMapper;
 
     // 构造器注入
-    @Autowired
+    @Autowired(required = false)
     public MapperTest(UserMapper userMapper, DiscussPostMapper discussPostMapper) {
         this.userMapper = userMapper;
         this.discussPostMapper = discussPostMapper;
