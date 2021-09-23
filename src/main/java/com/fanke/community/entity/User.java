@@ -91,12 +91,12 @@ public class User {
         this.headerUrl = headerUrl;
     }
 
-    public Date getCreatTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreatTime(Date creatTime) {
-        this.createTime = creatTime;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
     @Override
