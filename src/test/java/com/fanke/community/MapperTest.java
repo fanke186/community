@@ -1,8 +1,10 @@
 package com.fanke.community;
 
 import com.fanke.community.dao.DiscussPostMapper;
+import com.fanke.community.dao.LoginTicketMapper;
 import com.fanke.community.dao.UserMapper;
 import com.fanke.community.entity.DiscussPost;
+import com.fanke.community.entity.LoginTicket;
 import com.fanke.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +29,16 @@ public class MapperTest {
 
     private final UserMapper userMapper;
     private final DiscussPostMapper discussPostMapper;
+    private final LoginTicketMapper loginTicketMapper;
 
     // 构造器注入
     @Autowired(required = false)
-    public MapperTest(UserMapper userMapper, DiscussPostMapper discussPostMapper) {
+    public MapperTest(UserMapper userMapper,
+                      DiscussPostMapper discussPostMapper,
+                      LoginTicketMapper loginTicketMapper) {
         this.userMapper = userMapper;
         this.discussPostMapper = discussPostMapper;
+        this.loginTicketMapper = loginTicketMapper;
     }
 
     @Test
@@ -86,7 +92,26 @@ public class MapperTest {
         System.out.println(rows);
     }
 
+    @Test
+    public void testInsertLoginTicket() {
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(101);
+        loginTicket.setTicket("abc");
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 * 10));
 
+        loginTicketMapper.insertLoginTicket(loginTicket);
+    }
+
+    @Test
+    public void testSelectLoginTicket() {
+        LoginTicket loginTicket = loginTicketMapper.selectByTicket("abc");
+        System.out.println(loginTicket);
+
+        loginTicketMapper.updateStatus("abc", 1);
+        loginTicket = loginTicketMapper.selectByTicket("abc");
+        System.out.println(loginTicket);
+    }
 
 
 }

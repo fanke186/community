@@ -1,6 +1,8 @@
 package com.fanke.community.service;
 
+import com.fanke.community.dao.LoginTicketMapper;
 import com.fanke.community.dao.UserMapper;
+import com.fanke.community.entity.LoginTicket;
 import com.fanke.community.entity.User;
 import com.fanke.community.util.CommunityConstant;
 import com.fanke.community.util.CommunityUtil;
@@ -9,6 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import sun.plugin.com.event.COMEventListener;
@@ -32,6 +36,7 @@ public class UserService implements CommunityConstant {
     private final UserMapper userMapper;
     private final MailClient mailClient;
     private final TemplateEngine templateEngine;
+    private final LoginTicketMapper loginTicketMapper;
 
     @Value("${community.path.domain}")
     private String domain;
@@ -40,10 +45,12 @@ public class UserService implements CommunityConstant {
     private String contextPath;
 
     @Autowired(required = false)
-    public UserService(UserMapper userMapper, MailClient mailClient, TemplateEngine templateEngine) {
+    public UserService(UserMapper userMapper, MailClient mailClient, TemplateEngine templateEngine,
+                       LoginTicketMapper loginTicketMapper) {
         this.userMapper = userMapper;
         this.mailClient = mailClient;
         this.templateEngine = templateEngine;
+        this.loginTicketMapper = loginTicketMapper;
     }
 
     public User findUserById(int id) {
@@ -116,6 +123,57 @@ public class UserService implements CommunityConstant {
         } else {
             return ACTIVATION_FAILURE;
         }
+    }
+
+    // expiredSeconds 期望多久后过期
+    public Map<String, Object> login(String username, String password, int expiredSeconds) {
+        Map<String, Object> map = new HashMap<>();
+
+        // 空值处理
+        if (StringUtils.isBlank(username)) {
+            map.put("usernameMsg", "账号不能为空!");
+            return map;
+        }
+        if (StringUtils.isBlank(password)) {
+            map.put("passwordMsg", "密码不能为空!");
+            return map;
+        }
+
+        // 验证账号
+        User user = userMapper.selectByName(username);
+        if (user == null) {
+            map.put("usernameMsg", "该账号不存在!");
+            return map;
+        }
+
+        // 验证状态
+        if (user.getStatus() == 0) {
+            map.put("usernameMsg", "该账号未激活!");
+            return map;
+        }
+
+        // 验证密码
+        password = CommunityUtil.md5(password + user.getSalt());
+        if (!user.getPassword().equals(password)) {
+            map.put("passwordMsg", "密码不正确!");
+            return map;
+        }
+
+        // 验证通过，生成登录凭证
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(CommunityUtil.generateUUID());
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+        loginTicketMapper.insertLoginTicket(loginTicket);
+
+        // 只给登录凭证（一个String）即可
+        map.put("ticket", loginTicket.getTicket());
+        return map;
+    }
+
+    public void logout(String ticket) {
+        loginTicketMapper.updateStatus(ticket, 1);
     }
 
 
