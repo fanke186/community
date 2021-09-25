@@ -53,10 +53,21 @@ public class UserService implements CommunityConstant {
         this.loginTicketMapper = loginTicketMapper;
     }
 
+    /**
+     * 通过id查找用户
+     * @param id 指定id
+     * @return 用户
+     */
     public User findUserById(int id) {
         return userMapper.selectById(id);
     }
 
+
+    /**
+     * 注册业务
+     * @param user 传入的新注册用户对象
+     * @return 返回消息承载体
+     */
     public Map<String, Object> register(User user) {
         Map<String, Object> map = new HashMap<>();
 
@@ -113,6 +124,13 @@ public class UserService implements CommunityConstant {
         return map;
     }
 
+
+    /**
+     * 激活指定用户
+     * @param userId 用户id
+     * @param code 用户的激活码
+     * @return 激活结果信息码
+     */
     public int activation(int userId, String code) {
         User user = userMapper.selectById(userId);
         if (user.getStatus() == 1) {
@@ -125,7 +143,14 @@ public class UserService implements CommunityConstant {
         }
     }
 
-    // expiredSeconds 期望多久后过期
+
+    /**
+     * 登录业务
+     * @param username 用户名
+     * @param password 密码
+     * @param expiredSeconds 期望多久后登录状态过期
+     * @return 返回消息承载体
+     */
     public Map<String, Object> login(String username, String password, int expiredSeconds) {
         Map<String, Object> map = new HashMap<>();
 
@@ -172,10 +197,65 @@ public class UserService implements CommunityConstant {
         return map;
     }
 
+
+    /**
+     * 退出登录
+     * @param ticket 当前的登录凭证号
+     */
     public void logout(String ticket) {
         loginTicketMapper.updateStatus(ticket, 1);
     }
 
+    /**
+     * 查找当前登录凭证
+     * @param ticket 当前的登录凭证号
+     * @return 当前登录凭证
+     */
+    public LoginTicket findLoginTicket(String ticket) {
+        return loginTicketMapper.selectByTicket(ticket);
+    }
 
+
+    /**
+     * 更新用户头像
+     * @param userId 用户id
+     * @param headerUrl 新头像的url
+     * @return
+     */
+    public int updateHeader(int userId, String headerUrl) {
+        return userMapper.updateHeader(userId, headerUrl);
+    }
+
+    public Map<String, Object> updatePassword(User user, String oldPassword, String newPassword) {
+        Map<String, Object> map = new HashMap<>();
+
+        // 验证空值
+        if (StringUtils.isBlank(oldPassword)) {
+            map.put("pwdMsg", "原密码不能为空!");
+            return map;
+        }
+        if (StringUtils.isBlank(newPassword)) {
+            map.put("newPwdMsg", "新密码不能为空!");
+            return map;
+        }
+
+        // 验证输入的旧密码是否正确
+        String verify = CommunityUtil.md5(oldPassword + user.getSalt());
+        if (!user.getPassword().equals(verify)) {
+            map.put("pwdMsg", "旧密码不正确！");
+            return map;
+        }
+        // 验证新密码与旧密码是否相同
+        String newSalted = CommunityUtil.md5(newPassword + user.getSalt());
+        if (user.getPassword().equals(newSalted)) {
+            map.put("newPwdMsg", "旧密码不能与新密码相同！");
+            return map;
+        }
+
+        // 修改密码
+        userMapper.updatePassword(user.getId(), newSalted);
+
+        return map;
+    }
 
 }

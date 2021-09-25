@@ -33,6 +33,12 @@ public class MailClient {
         this.mailSender = mailSender;
     }
 
+    /**
+     * 发送邮件
+     * @param to 目标邮箱
+     * @param subject 邮件标题
+     * @param content 邮件内容
+     */
     public void sendMail(String to, String subject, String content) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
