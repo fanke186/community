@@ -24,11 +24,14 @@ public class DiscussPostController implements CommunityConstant {
 
     private final DiscussPostService discussPostService;
     private final HostHolder hostHolder;
+    private final UserService userService;
 
     @Autowired
-    public DiscussPostController(DiscussPostService discussPostService, HostHolder hostHolder) {
+    public DiscussPostController(DiscussPostService discussPostService, HostHolder hostHolder,
+                                 UserService userService) {
         this.discussPostService = discussPostService;
         this.hostHolder = hostHolder;
+        this.userService = userService;
     }
 
     @RequestMapping(path = "/add", method = RequestMethod.POST)
@@ -48,5 +51,18 @@ public class DiscussPostController implements CommunityConstant {
 
         // 报错的情况,将来统一处理.
         return CommunityUtil.getJSONString(0, "发布成功!");
+    }
+
+    @RequestMapping(path = "/detail/{discussPostId}", method = RequestMethod.GET)
+    public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Model model) {
+        // 查询帖子
+        DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
+        model.addAttribute("post", post);
+        // 查询作者
+        User user = userService.findUserById(post.getUserId());
+        model.addAttribute("user", user);
+        // todo...评论
+
+        return "site/discuss-detail";
     }
 }
